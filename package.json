@@ -1,0 +1,27 @@
+{
+  "name": "lunchbox-server",
+  "version": "1.0.0",
+  "description": "The server for the lunchbox app",
+  "main": "dist/server.js",
+  "author": "Jake Flynn",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
+    "prod": "tsc && node -r dotenv/config ./dist/server.js"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0",
+    "typescript": "^3.9.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.6",
+    "@types/express": "^4.17.6",
+    "@types/socket.io": "^2.1.8",
+    "ts-node-dev": "^1.0.0-pre.49"
+  }
+}
