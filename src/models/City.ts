@@ -1,4 +1,5 @@
 import Zomato from './Zomato';
+import MemoryCache from '../stores/MemoryCache';
 import { ZomatoCityData, ZomatoCityResponse } from '../types/zomato';
 
 interface City {
@@ -6,6 +7,8 @@ interface City {
   name: string;
   area: string;
 }
+
+const cache = new MemoryCache<City[]>();
 
 class City {
   constructor(props: ZomatoCityData) {
@@ -15,11 +18,20 @@ class City {
   }
 
   static async findManyByQuery (query: string): Promise<City[]> {
-    const { data } = await Zomato.get<ZomatoCityResponse>('cities', { q: query })
+    const opts = {
+      endpoint: 'cities',
+      params: { q: query }
+    };
+
+    if (cache.has(opts)) return cache.get(opts)
+
+    const { data } = await Zomato.get<ZomatoCityResponse>(opts.endpoint, opts.params)
 
     if (!data) return []
 
-    return data.location_suggestions.map(l => new City(l))
+    const cities = data.location_suggestions.map(l => new City(l))
+
+    return cache.set(opts, cities, { hours: 1 })
   }
 }
 

@@ -1,10 +1,13 @@
 import { ZomatoCuisinesResponse, ZomatoCuisineData } from '../types/zomato';
 import Zomato from './Zomato';
+import MemoryCache from '../stores/MemoryCache';
 
 interface Cuisine {
   id: number;
   name: string;
 }
+
+const cache = new MemoryCache<Cuisine[]>()
 
 class Cuisine {
   constructor(props: ZomatoCuisineData) {
@@ -13,13 +16,20 @@ class Cuisine {
   }
 
   static async findManyByCityId (cityId: string): Promise<Cuisine[]> {
-    const { data } = await Zomato.get<ZomatoCuisinesResponse>('cuisines', {
-      city_id: cityId
-    })
+    const opts = {
+      endpoint: 'cuisines',
+      params: { city_id: cityId }
+    };
+
+    if (cache.has(opts)) return cache.get(opts)
+
+    const { data } = await Zomato.get<ZomatoCuisinesResponse>(opts.endpoint, opts.params)
 
     if (!data) return []
 
-    return data.cuisines.map(({ cuisine }) => new Cuisine(cuisine))
+    const cuisines = data.cuisines.map(({ cuisine }) => new Cuisine(cuisine))
+
+    return cache.set(opts, cuisines, { hours: 1 })
   }
 }
 
