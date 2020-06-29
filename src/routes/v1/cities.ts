@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     return res.send('Please provide a search query.')
   }
 
-  const suggestions = await City.findManyByQuery(searchQuery.toString())
+  const suggestions = await City.findManyByQuery(searchQuery.toString().toLowerCase())
 
   return res.send(suggestions)
 });

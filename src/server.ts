@@ -4,13 +4,12 @@ import * as socketio from 'socket.io';
 import * as cors from 'cors';
 
 import formatMessage from './utils/formatMessage';
-import { Room, User } from './types/constants';
+import { Room } from './types/constants';
 import UserStore from './stores/UserStore';
 import cities from './routes/v1/cities';
 import restaurants from './routes/v1/restaurants';
 import cuisines from './routes/v1/cuisines';
 import City from './models/City';
-import Cuisine from './models/Cuisine';
 
 const app = express()
 

@@ -9,6 +9,7 @@ interface Restaurant {
   priceRange?: number;
   image?: string;
   thumbnail?: string;
+  photosUrl?: string;
   menuUrl?: string;
   hasOnlineDelivery?: boolean;
   hasTableBooking?: boolean;
@@ -54,13 +55,15 @@ class Restaurant {
     this.takeawayOpen = props.R?.has_menu_status?.takeaway;
     this.totalReviews = props.all_reviews_count;
     this.averageRating = props.user_rating?.aggregate_rating
+    this.photosUrl = props.photos_url
   }
 
-  static async findManyByCityId (cityId: string, cuisines: string): Promise<RestaurantListWithMetaData> {
+  static async findMany (cityId: string, cuisines?: string, q?: string): Promise<RestaurantListWithMetaData> {
     const { data } = await Zomato.get<ZomatoRestaurantResponse>('search', {
       entity_id: cityId,
       entity_type: ZomatoSearchEntities.CITY,
-      cuisines
+      cuisines,
+      q
     })
 
     if (!data) return null

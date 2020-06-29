@@ -4,8 +4,8 @@ import Restaurant from '../../models/Restaurant';
 
 const router = Router();
 
-router.get('/city', async (req, res) => {
-  const { cityId, cuisines } = req.query
+router.get('/search', async (req, res) => {
+  const { cityId, cuisines = '', searchQuery = '' } = req.query
 
   if (!cityId) {
     res.status(400)
@@ -13,7 +13,7 @@ router.get('/city', async (req, res) => {
     return res.send('Please provide a city id.')
   }
 
-  const response = await Restaurant.findManyByCityId(cityId.toString(), cuisines.toString());
+  const response = await Restaurant.findMany(cityId.toString(), cuisines.toString(), searchQuery.toString());
 
   return res.send(response)
 });
