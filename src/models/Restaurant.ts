@@ -26,7 +26,8 @@ interface Restaurant {
 
 interface RestaurantMetaData {
   totalResults: number;
-  resultsShown: number;
+  hasMoreResults: boolean;
+  nextPageStart: number;
 }
 
 interface RestaurantListWithMetaData {
@@ -51,19 +52,25 @@ class Restaurant {
     this.highlights = props.highlights;
     this.phoneNumbers = props.phone_numbers;
     this.openHours = props.timings;
-    this.deliveryOpen = props.R?.has_menu_status?.delivery;
-    this.takeawayOpen = props.R?.has_menu_status?.takeaway;
+    this.deliveryOpen = Boolean(props.is_delivering_now);
+    this.takeawayOpen = Boolean(props.R?.has_menu_status?.takeaway);
     this.totalReviews = props.all_reviews_count;
     this.averageRating = props.user_rating?.aggregate_rating
     this.photosUrl = props.photos_url
   }
 
-  static async findMany (cityId: string, cuisines?: string, q?: string): Promise<RestaurantListWithMetaData> {
+  static async findMany (
+    cityId: string,
+    cuisines?: string,
+    q?: string,
+    paginationStart?: number
+  ): Promise<RestaurantListWithMetaData> {
     const { data } = await Zomato.get<ZomatoRestaurantResponse>('search', {
       entity_id: cityId,
       entity_type: ZomatoSearchEntities.CITY,
       cuisines,
-      q
+      q,
+      start: paginationStart,
     })
 
     if (!data) return null
@@ -75,7 +82,8 @@ class Restaurant {
     return {
       metadata: {
         totalResults: data.results_found,
-        resultsShown: data.results_shown,
+        nextPageStart: data.results_start + data.results_shown,
+        hasMoreResults: Boolean((data.results_start + data.results_shown) < data.results_found)
       },
       restaurants: data.restaurants.map(({ restaurant }) => new Restaurant(restaurant))
     }

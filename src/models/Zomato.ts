@@ -8,6 +8,7 @@ export interface ZomatoGetParams {
   q?: string;
   city_id?: string;
   cuisines?: string;
+  start?: number;
 }
 
 const ZOMATO_API_KEY = process.env.ZOMATO_API_KEY
