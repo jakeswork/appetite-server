@@ -4,12 +4,13 @@ import * as socketio from 'socket.io';
 import * as cors from 'cors';
 
 import formatMessage from './utils/formatMessage';
-import { Room } from './types/constants';
-import UserStore from './stores/UserStore';
 import cities from './routes/v1/cities';
 import restaurants from './routes/v1/restaurants';
 import cuisines from './routes/v1/cuisines';
 import City from './models/City';
+import Restaurant from './models/Restaurant';
+import User from './models/User';
+import Room from './models/Room';
 
 const app = express()
 
@@ -20,85 +21,111 @@ app.use('/api/v1/cuisines', cors(), cuisines)
 const server = createServer(app)
 const io = socketio(server)
 
-const users = new UserStore();
-
 const roomMetaUpdate = (room: Room) => (
   io.to(room.id).emit('roomUsersUpdated', {
     room,
-    users: users.findManyByRoomId(room.id),
-    count: users.getCountByRoomId(room.id)
+    count: room.users.length
   })
 )
 
-io.on('connection', (socket) => {
+io.on('connect', (socket) => {
+  const user = User.create(socket.id)
+
   socket.on('createRoom', (username: string, city: City, cuisines: number[]) => {
     try {
-      const room = {
+      user.setUsername(username)
+
+      const room = Room.create({
         id: socket.id,
         city,
         cuisines
-      }
-      const user = users.upsert(socket.id, room, username)
+      })
 
-      socket.join(user.room.id)
+      if (!room) return null;
 
-      io.to(socket.id).emit('successfulCreate', user)
+      user.joinRoom(room.id)
 
-      roomMetaUpdate(user.room)
+      socket.join(room.id, (error) => {
+        if (error) return io.to(socket.id).emit('createRoomError', error.message)
+
+        roomMetaUpdate(room)
+
+        io.to(user.id).emit('successfulCreate', user)
+      })
     } catch (e) {
       console.error(e)
 
-      io.to(socket.id).emit('createRoomError', e.message)
+      io.to(user.id).emit('createRoomError', e.message)
     }
   })
 
   socket.on('joinRoom', (roomId: string) => {
     try {
-      const city = users.getCityByRoomId(roomId);
-      const cuisines = users.getCuisinesByRoomId(roomId);
+      const joinedRoom = user.joinRoom(roomId)
 
-      if (!city || !cuisines) throw new Error('Room does not exist')
+      if (!joinedRoom) throw new Error('Room does not exist')
 
-      const room = {
-        id: roomId,
-        city,
-        cuisines
-      }
-      const newUser = users.upsert(socket.id, room)
+      socket.join(joinedRoom.id, (error) => {
+        if (error) return io.to(socket.id).emit('joinRoomError', error.message)
 
-      socket.join(newUser.room.id)
+        roomMetaUpdate(joinedRoom)
 
-      roomMetaUpdate(newUser.room)
-
-      return io.to(socket.id).emit('successfulJoin', newUser)
+        io.to(user.id).emit('successfulJoin', user)
+      })
     } catch (e) {
       console.error(e)
 
-      io.to(socket.id).emit('joinRoomError', e.message)
+      io.to(user.id).emit('joinRoomError', e.message)
     }
   })
 
   socket.on('setUsername', (username: string) => {
     try {
-      const userUpdated = users.setUsername(socket.id, username)
+      const userUpdated = user.setUsername(username)
 
       if (!userUpdated) return null;
 
       roomMetaUpdate(userUpdated.room)
 
-      return io.to(socket.id).emit('successfulSetUsername', userUpdated)
+      return io.to(user.id).emit('successfulSetUsername', userUpdated)
     } catch (error) {
       console.error(error);
 
-      io.to(socket.id).emit('setUsernameError', error.message)
+      io.to(user.id).emit('setUsernameError', error.message)
     }
   })
 
-  socket.on('sendMessage', (message: string) => {
-    const user = users.findById(socket.id)
+  socket.on('addRestaurant', (restaurant: Restaurant) => {
+    const userUpdated = user.addRestaurantToSelection(restaurant)
 
-    if (!user) {
-      io.to(socket.id).emit('sendMessageError', 'You are not registered to any room')
+    if (!userUpdated) return null;
+
+    roomMetaUpdate(userUpdated.room)
+
+    return io.to(user.id).emit('successfulAddRestaurant', userUpdated)
+  })
+
+  socket.on('removeRestaurant', (restaurantId: number) => {
+    const userUpdated = user.removeRestaurantFromSelection(restaurantId)
+
+    if (!userUpdated) return null;
+
+    roomMetaUpdate(userUpdated.room)
+
+    return io.to(user.id).emit('successfulRemoveRestaurant', userUpdated)
+  })
+
+  socket.on('confirmSelection', () => {
+    const userUpdated = user.confirmVoteSelection()
+
+    if (!userUpdated) return null;
+
+    return io.to(user.id).emit('successfulConfirmSelection', userUpdated)
+  })
+
+  socket.on('sendMessage', (message: string) => {
+    if (!user.room || !user.room.id) {
+      io.to(user.id).emit('sendMessageError', 'You are not registered to any room')
 
       return null
     };
@@ -107,9 +134,9 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
-    const removedUser = users.removeById(socket.id)
+    const removedUser = user.delete()
 
-    if (removedUser) roomMetaUpdate(removedUser.room)
+    if (removedUser && user.room) roomMetaUpdate(user.room)
   })
 })
 

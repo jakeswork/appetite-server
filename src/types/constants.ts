@@ -1,5 +1,5 @@
 import City from "../models/City"
-import Cuisine from '../models/Cuisine';
+import Restaurant from '../models/Restaurant';
 
 export type FormattedMessage = {
   username: string;
@@ -10,11 +10,18 @@ export type FormattedMessage = {
 export type User = {
   id: string;
   username?: string;
-  room: Room;
+  room?: Room;
+  vote?: UserVote;
+}
+
+export type UserVote = {
+  hasConfirmedSelection: boolean;
+  selection: Restaurant[];
 }
 
 export type Room = {
   id: string;
   city: City;
   cuisines: number[];
+  users?: string[];
 }

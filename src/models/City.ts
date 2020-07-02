@@ -25,11 +25,11 @@ class City {
 
     if (cache.has(opts)) return cache.get(opts)
 
-    const { data } = await Zomato.get<ZomatoCityResponse>(opts.endpoint, opts.params)
+    const response = await Zomato.get<ZomatoCityResponse>(opts.endpoint, opts.params)
 
-    if (!data) return []
+    if (!response) return []
 
-    const cities = data.location_suggestions.map(l => new City(l))
+    const cities = response.data.location_suggestions.map(l => new City(l))
 
     return cache.set(opts, cities, { hours: 1 })
   }

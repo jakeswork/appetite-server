@@ -23,11 +23,11 @@ class Cuisine {
 
     if (cache.has(opts)) return cache.get(opts)
 
-    const { data } = await Zomato.get<ZomatoCuisinesResponse>(opts.endpoint, opts.params)
+    const response = await Zomato.get<ZomatoCuisinesResponse>(opts.endpoint, opts.params)
 
-    if (!data) return []
+    if (!response) return []
 
-    const cuisines = data.cuisines.map(({ cuisine }) => new Cuisine(cuisine))
+    const cuisines = response.data.cuisines.map(({ cuisine }) => new Cuisine(cuisine))
 
     return cache.set(opts, cuisines, { hours: 1 })
   }

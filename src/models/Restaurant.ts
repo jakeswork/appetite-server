@@ -65,7 +65,7 @@ class Restaurant {
     q?: string,
     paginationStart?: number
   ): Promise<RestaurantListWithMetaData> {
-    const { data } = await Zomato.get<ZomatoRestaurantResponse>('search', {
+    const response = await Zomato.get<ZomatoRestaurantResponse>('search', {
       entity_id: cityId,
       entity_type: ZomatoSearchEntities.CITY,
       cuisines,
@@ -73,9 +73,9 @@ class Restaurant {
       start: paginationStart,
     })
 
-    if (!data) return null
+    if (!response) return null
 
-    return Restaurant.decorateWithMetaData(data)
+    return Restaurant.decorateWithMetaData(response.data)
   }
 
   static decorateWithMetaData (data: ZomatoRestaurantResponse): RestaurantListWithMetaData {
