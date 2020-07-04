@@ -31,6 +31,12 @@ class MemoryStore {
     return Object.assign(this.rooms[index], room)
   }
 
+  usernameExistsInRoom (roomId: string, username: string): boolean {
+    const userExists = this.users.find(u => Boolean(u.room.id === roomId && u.username === username))
+
+    return Boolean(userExists)
+  }
+
   findUserById (userId: string): User | null {
     return this.users.find(u => u.id === userId)
   }

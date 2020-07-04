@@ -47,6 +47,12 @@ class User {
   }
 
   setUsername (username: string): User {
+    if (this.room && this.room.id) {
+      const usernameTaken = store.usernameExistsInRoom(this.room.id, username)
+
+      if (usernameTaken) throw new Error('Username is taken.')
+    }
+
     this.username = username;
 
     store.upsertUser(this)
