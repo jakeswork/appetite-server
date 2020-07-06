@@ -39,12 +39,22 @@ class Room {
     return new Room(room)
   }
 
-  newUser (userId: string): Room | null {
+  addUser (userId: string): Room | null {
     const index = this.users.indexOf(userId)
 
     if (index > -1) return null;
 
-    this.users.concat(userId)
+    this.users.push(userId)
+
+    store.upsertRoom(this)
+
+    return this;
+  }
+
+  removeUser (userId: string): Room | null {
+    const usersWithoutId = this.users.filter(u => u !== userId);
+
+    this.users = usersWithoutId
 
     store.upsertRoom(this)
 

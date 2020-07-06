@@ -33,7 +33,10 @@ class SocketIO {
   }
 
   static connect (server: any) {
-    const io = socketio(server)
+    const io = socketio(server, {
+      transports: ['websocket'],
+      pingTimeout: 6000000
+    })
 
     return io.on('connect', (s) => new SocketIO({ socket: s, server: io }))
   }
@@ -53,17 +56,17 @@ class SocketIO {
   
         this.user.joinRoom(room.id)
   
-        this.socket.join(room.id, (error) => {
+        return this.socket.join(room.id, (error) => {
           if (error) return this.server.to(this.socket.id).emit('createRoomError', error.message)
   
-          this.roomMetaUpdate(room)
+          this.roomMetaUpdate()
   
-          this.server.to(this.user.id).emit('successfulCreate', this.user)
+          return this.server.to(this.user.id).emit('successfulCreate', this.user)
         })
       } catch (e) {
         console.error(e)
   
-        this.server.to(this.user.id).emit('createRoomError', e.message)
+        return this.server.to(this.user.id).emit('createRoomError', e.message)
       }
     })
   }
@@ -75,17 +78,17 @@ class SocketIO {
   
         if (!joinedRoom) throw new Error('Room does not exist')
   
-        this.socket.join(joinedRoom.id, (error) => {
+        return this.socket.join(joinedRoom.id, (error) => {
           if (error) return this.server.to(this.socket.id).emit('joinRoomError', error.message)
   
-          this.roomMetaUpdate(joinedRoom)
+          this.roomMetaUpdate()
   
-          this.server.to(this.user.id).emit('successfulJoin', this.user)
+          return this.server.to(this.user.id).emit('successfulJoin', this.user)
         })
       } catch (e) {
         console.error(e)
   
-        this.server.to(this.user.id).emit('joinRoomError', e.message)
+        return this.server.to(this.user.id).emit('joinRoomError', e.message)
       }
     })
   }
@@ -97,13 +100,13 @@ class SocketIO {
   
         if (!userUpdated) return null;
   
-        this.roomMetaUpdate(userUpdated.room)
+        this.roomMetaUpdate()
   
         return this.server.to(this.user.id).emit('successfulSetUsername', userUpdated)
       } catch (error) {
         console.error(error);
   
-        this.server.to(this.user.id).emit('setUsernameError', error.message)
+        return this.server.to(this.user.id).emit('setUsernameError', error.message)
       }
     })
   }
@@ -114,7 +117,7 @@ class SocketIO {
   
       if (!userUpdated) return null;
   
-      this.roomMetaUpdate(userUpdated.room)
+      this.roomMetaUpdate()
   
       return this.server.to(this.user.id).emit('successfulAddRestaurant', userUpdated)
     })
@@ -126,7 +129,7 @@ class SocketIO {
   
       if (!userUpdated) return null;
   
-      this.roomMetaUpdate(userUpdated.room)
+      this.roomMetaUpdate()
   
       return this.server.to(this.user.id).emit('successfulRemoveRestaurant', userUpdated)
     })
@@ -150,24 +153,41 @@ class SocketIO {
         return null
       };
   
-      this.server.to(this.user.room.id).emit('message', message)
+      return this.server.to(this.user.room.id).emit('message', message)
     })
   }
 
   onDisconnect () {
     return this.socket.on('disconnect', () => {
-      const removedUser = this.user.delete()
-  
-      if (removedUser && this.user.room) this.roomMetaUpdate(this.user.room)
+      const previousRoom = this.user.leaveRoom()
 
-      return delete this.user
+      this.roomMetaUpdate(previousRoom)
+
+      this.user.delete()
+
+      delete this.user
     })
   }
 
-  roomMetaUpdate (room: Room) {
-    return this.server.to(room.id).emit('roomUsersUpdated', {
-      room,
-      count: room.users.length
+  roomMetaUpdate (r?: Room) {
+    if (r) {
+      const room = Room.findById(r.id)
+      const users = room.users.map(userId => User.findById(userId)).filter(u => u)
+
+      return this.server.to(room.id).emit('roomUsersUpdated', {
+        users,
+        count: users.length
+      })
+    }
+
+    if (!this.user.room) return null;
+
+    const room = Room.findById(this.user.room.id)
+    const users = room.users.map(userId => User.findById(userId)).filter(u => u)
+
+    return this.server.to(this.user.room.id).emit('roomUsersUpdated', {
+      users,
+      count: users.length
     })
   }
 }

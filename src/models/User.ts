@@ -34,16 +34,36 @@ class User {
     return new User(user)
   }
 
+  static findById (userId: string): User | null {
+    const user = store.findUserById(userId)
+
+    if (!user) return null;
+
+    return new User(user)
+  }
+
   joinRoom (roomId: string): Room | null {
     const room = Room.findById(roomId);
 
     if (!room) return null;
 
-    this.room = room.newUser(this.id)
+    this.room = room.addUser(this.id)
 
     store.upsertUser(this)
 
     return room;
+  }
+
+  leaveRoom (): Room | null {
+    if (!this.room) return null;
+
+    const previousRoom = this.room.removeUser(this.id)
+
+    this.room = null;
+
+    store.upsertUser(this);
+
+    return previousRoom
   }
 
   setUsername (username: string): User {
@@ -73,18 +93,10 @@ class User {
     return this;
   }
 
-  removeRestaurantFromSelection (restaurantId: number): User | null {
-    const index = this.vote.selection.findIndex(s => s.id === restaurantId)
-
-    if (!index) return null;
-
-    const newSelection = this.vote.selection.slice()
-
-    newSelection.splice(index, 1)
-
+  removeRestaurantFromSelection (restaurantId: number): User {
     this.vote = {
       hasConfirmedSelection: false,
-      selection: newSelection,
+      selection: this.vote.selection.filter(r => r.id !== restaurantId)
     }
 
     store.upsertUser(this)

@@ -28,11 +28,13 @@ class MemoryStore {
 
     const index = this.rooms.findIndex(r => r.id === room.id);
 
-    return Object.assign(this.rooms[index], room)
+    this.rooms[index] = room
+
+    return this.rooms[index]
   }
 
   usernameExistsInRoom (roomId: string, username: string): boolean {
-    const userExists = this.users.find(u => Boolean(u.room.id === roomId && u.username === username))
+    const userExists = this.users.find(u => Boolean(u.room && u.room.id === roomId && u.username === username))
 
     return Boolean(userExists)
   }
@@ -54,18 +56,17 @@ class MemoryStore {
 
     const index = this.users.findIndex(u => u.id === user.id);
 
-    return Object.assign(this.users[index], user)
+    this.users[index] = user
+
+    return this.users[index]
   }
 
-  deleteUserById (id: string): boolean {
-    if (!this.findUserById(id)) return true;
+  deleteUserById (userId: string): boolean {
+    if (!this.findUserById(userId)) return true;
 
-    const index = this.users.findIndex(u => u.id === id);
-    const newUsers = this.users.slice();
+    const usersWithoutId = this.users.filter(u => u.id !== userId)
 
-    newUsers.splice(index, 1);
-
-    this.users = newUsers;
+    this.users = usersWithoutId
 
     return true;
   }
