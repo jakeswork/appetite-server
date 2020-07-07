@@ -80,24 +80,25 @@ class User {
     return this;
   }
 
-  addRestaurantToSelection (restaurant: Restaurant): User | null {
+  updateRestaurantSelection (restaurant: Restaurant): User {
+    const restaurantExists = this.vote.selection.findIndex(r => r.id === restaurant.id) > -1
+
+    if (restaurantExists) {
+      this.vote = {
+        hasConfirmedSelection: false,
+        selection: this.vote.selection.filter(r => r.id !== restaurant.id)
+      }
+  
+      store.upsertUser(this)
+  
+      return this;
+    }
+
     if (this.vote.selection.length === 3) throw new Error('You have already selected 3 restaurants.')
 
-    this.vote = {
-      hasConfirmedSelection: false,
-      selection: this.vote.selection.concat(restaurant)
-    }
+    this.vote.hasConfirmedSelection = false;
 
-    store.upsertUser(this)
-
-    return this;
-  }
-
-  removeRestaurantFromSelection (restaurantId: number): User {
-    this.vote = {
-      hasConfirmedSelection: false,
-      selection: this.vote.selection.filter(r => r.id !== restaurantId)
-    }
+    this.vote.selection.push(restaurant)
 
     store.upsertUser(this)
 

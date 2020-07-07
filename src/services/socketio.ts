@@ -25,8 +25,7 @@ class SocketIO {
     this.onCreateRoom()
     this.onJoinRoom()
     this.onSetUsername()
-    this.onAddRestaurant()
-    this.onRemoveRestaurant()
+    this.onUpdateSelection()
     this.onConfirmSelection()
     this.onSendMessage()
     this.onDisconnect()
@@ -111,27 +110,19 @@ class SocketIO {
     })
   }
 
-  onAddRestaurant () {
-    return this.socket.on('addRestaurant', (restaurant: Restaurant) => {
-      const userUpdated = this.user.addRestaurantToSelection(restaurant)
-  
-      if (!userUpdated) return null;
-  
-      this.roomMetaUpdate()
-  
-      return this.server.to(this.user.id).emit('successfulAddRestaurant', userUpdated)
-    })
-  }
+  onUpdateSelection () {
+    return this.socket.on('updateSelection', (restaurant: Restaurant) => {
+      try {
+        const userUpdated = this.user.updateRestaurantSelection(restaurant)
+    
+        this.roomMetaUpdate()
+    
+        return this.server.to(this.user.id).emit('successfulUpdateSelection', userUpdated)
+      } catch (error) {
+        console.error(error)
 
-  onRemoveRestaurant () {
-    return this.socket.on('removeRestaurant', (restaurantId: number) => {
-      const userUpdated = this.user.removeRestaurantFromSelection(restaurantId)
-  
-      if (!userUpdated) return null;
-  
-      this.roomMetaUpdate()
-  
-      return this.server.to(this.user.id).emit('successfulRemoveRestaurant', userUpdated)
+        return this.server.to(this.user.id).emit('updateSelectionError', error.message)
+      }
     })
   }
 
@@ -140,6 +131,8 @@ class SocketIO {
       const userUpdated = this.user.confirmVoteSelection()
   
       if (!userUpdated) return null;
+
+      this.roomMetaUpdate();
   
       return this.server.to(this.user.id).emit('successfulConfirmSelection', userUpdated)
     })
