@@ -111,6 +111,8 @@ class SocketIO {
   }
 
   onUpdateSelection () {
+    if (this.user.vote.hasConfirmedSelection) return null;
+
     return this.socket.on('updateSelection', (restaurant: Restaurant) => {
       try {
         const userUpdated = this.user.updateRestaurantSelection(restaurant)
@@ -127,6 +129,8 @@ class SocketIO {
   }
 
   onConfirmSelection () {
+    if (this.user.vote.hasConfirmedSelection) return null;
+
     return this.socket.on('confirmSelection', () => {
       const userUpdated = this.user.confirmVoteSelection()
   
@@ -166,10 +170,12 @@ class SocketIO {
     if (r) {
       const room = Room.findById(r.id)
       const users = room.users.map(userId => User.findById(userId)).filter(u => u)
+      const oneUserHasntVoted = users.some(u => !u.vote.hasConfirmedSelection)
 
       return this.server.to(room.id).emit('roomUsersUpdated', {
         users,
-        count: users.length
+        count: users.length,
+        allUsersHaveVoted: !oneUserHasntVoted
       })
     }
 
@@ -177,10 +183,12 @@ class SocketIO {
 
     const room = Room.findById(this.user.room.id)
     const users = room.users.map(userId => User.findById(userId)).filter(u => u)
+    const oneUserHasntVoted = users.some(u => !u.vote.hasConfirmedSelection)
 
     return this.server.to(this.user.room.id).emit('roomUsersUpdated', {
       users,
-      count: users.length
+      count: users.length,
+      allUsersHaveVoted: !oneUserHasntVoted
     })
   }
 }
