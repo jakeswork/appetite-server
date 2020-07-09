@@ -131,10 +131,19 @@ class SocketIO {
   onConfirmSelection () {
     if (this.user.vote.hasConfirmedSelection) return null;
 
-    return this.socket.on('confirmSelection', () => {
+    return this.socket.on('confirmSelection', async () => {
       const userUpdated = this.user.confirmVoteSelection()
   
       if (!userUpdated) return null;
+
+      const voteResults = await this.user.room.getVoteResults();
+
+      if (voteResults) {
+        this.server.to(this.user.room.id).emit('voteComplete', {
+          users: this.user.room.users,
+          ...voteResults,
+        })
+      }
 
       this.roomMetaUpdate();
   
@@ -170,12 +179,10 @@ class SocketIO {
     if (r) {
       const room = Room.findById(r.id)
       const users = room.users.map(userId => User.findById(userId)).filter(u => u)
-      const oneUserHasntVoted = users.some(u => !u.vote.hasConfirmedSelection)
 
       return this.server.to(room.id).emit('roomUsersUpdated', {
         users,
         count: users.length,
-        allUsersHaveVoted: !oneUserHasntVoted
       })
     }
 
@@ -183,12 +190,10 @@ class SocketIO {
 
     const room = Room.findById(this.user.room.id)
     const users = room.users.map(userId => User.findById(userId)).filter(u => u)
-    const oneUserHasntVoted = users.some(u => !u.vote.hasConfirmedSelection)
 
     return this.server.to(this.user.room.id).emit('roomUsersUpdated', {
       users,
       count: users.length,
-      allUsersHaveVoted: !oneUserHasntVoted
     })
   }
 }

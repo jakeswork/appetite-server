@@ -78,6 +78,16 @@ class Restaurant {
     return Restaurant.decorateWithMetaData(response.data)
   }
 
+  static async findById (restaurantId: string): Promise<Restaurant | null> {
+    const response = await Zomato.get<ZomatoRestaurantData>('restaurant', {
+      res_id: Number(restaurantId),
+    });
+
+    if (!response) return null;
+
+    return new Restaurant(response.data);
+  }
+
   static decorateWithMetaData (data: ZomatoRestaurantResponse): RestaurantListWithMetaData {
     return {
       metadata: {

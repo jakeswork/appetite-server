@@ -1,12 +1,20 @@
 import City from "./City";
 import { Room as RoomType } from '../types/constants';
 import store from '../stores/MemoryStore'
+import User from './User';
+import { mostCommonEntries } from '../utils';
+import Restaurant from "./Restaurant";
 
 interface Room {
   id: string;
   city: City;
   cuisines: number[];
   users?: string[];
+}
+
+type VoteResults = {
+  mostCommonRestaurants: Restaurant[];
+  mostCommonCuisines: string[];
 }
 
 class Room {
@@ -59,6 +67,27 @@ class Room {
     store.upsertRoom(this)
 
     return this;
+  }
+
+  async getVoteResults (): Promise<VoteResults> | null {
+    if (!this.users || !this.users.length) return null;
+
+    const users = this.users.map(userId => User.findById(userId)).filter(u => u)
+    const allUsersHaveVoted = users.every(u => u.vote.hasConfirmedSelection)
+
+    if (!allUsersHaveVoted) return null;
+
+    const usersSelections = [].concat(...users.map(({ vote }) => vote.selection))
+    const restaurants = usersSelections.map(({ id }) => id)
+    const cuisines = [].concat(...usersSelections.map(({ cuisines }) => cuisines.split(', ')))
+    const mostCommonRestaurants = mostCommonEntries(restaurants)
+    const mostCommonCuisines = mostCommonEntries(cuisines);
+    const resolvedRestaurants = await Promise.all(mostCommonRestaurants.map(id => Restaurant.findById(id)))
+
+    return {
+      mostCommonRestaurants: resolvedRestaurants,
+      mostCommonCuisines,
+    }
   }
 }
 
