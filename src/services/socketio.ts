@@ -4,6 +4,7 @@ import User from '../models/User';
 import Room from '../models/Room';
 import City from '../models/City';
 import Restaurant from '../models/Restaurant';
+import { Message } from '../types/constants';
 
 interface SocketIO {
   user: User;
@@ -152,14 +153,22 @@ class SocketIO {
   }
 
   onSendMessage () {
-    return this.socket.on('sendMessage', (message: string) => {
+    return this.socket.on('sendMessage', (content: string) => {
       if (!this.user.room || !this.user.room.id) {
-        this.server.to(this.user.id).emit('sendMessageError', 'You are not registered to any room')
-  
-        return null
+        return this.server.to(this.user.id).emit('sendMessageError', 'You are not registered to any room')
       };
+
+      const timestamp = new Date().toISOString();
+      const message: Message = {
+        from: this.user.id,
+        displayName: this.user.username,
+        timestamp,
+        content
+      }
+      
+      this.user.room.addMessage(message)
   
-      return this.server.to(this.user.room.id).emit('message', message)
+      return this.server.to(this.user.room.id).emit('messageHistoryUpdated', this.user.room.messages)
     })
   }
 

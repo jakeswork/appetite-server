@@ -1,5 +1,5 @@
 import City from "./City";
-import { Room as RoomType } from '../types/constants';
+import { Room as RoomType, Message } from '../types/constants';
 import store from '../stores/MemoryStore'
 import User from './User';
 import { mostCommonEntries } from '../utils';
@@ -10,6 +10,7 @@ interface Room {
   city: City;
   cuisines: number[];
   users?: string[];
+  messages: Message[];
 }
 
 type VoteResults = {
@@ -32,6 +33,7 @@ class Room {
       ...room,
       id: roomId,
       users: [],
+      messages: [],
     }
 
     store.insertRoom(withDefaults)
@@ -69,6 +71,14 @@ class Room {
     return this;
   }
 
+  addMessage (message: Message): Room {
+    this.messages.push(message)
+
+    store.upsertRoom(this)
+
+    return;
+  }
+ 
   async getVoteResults (): Promise<VoteResults> | null {
     if (!this.users || !this.users.length) return null;
 

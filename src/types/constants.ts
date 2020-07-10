@@ -24,4 +24,12 @@ export type Room = {
   city: City;
   cuisines: number[];
   users?: string[];
+  messages?: Message[];
+}
+
+export type Message = {
+  from: string;
+  displayName?: string;
+  timestamp: string;
+  content: string;
 }
