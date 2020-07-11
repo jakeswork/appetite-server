@@ -2,7 +2,7 @@ interface History {
   [key: string]: number;
 }
 
-function mostCommonEntries (array: string[]): string[] {
+function mostCommonEntries (array: string[], limit?: number): string[] {
   const history: History = {}
 
   array.forEach((item) => {
@@ -25,6 +25,8 @@ function mostCommonEntries (array: string[]): string[] {
   const withMultipleTopEntries = sorted
     .filter((item, index) => !sorted[index - 1] || item[1] === sorted[0][1])
     .map(item => item[0])
+  
+  if (limit) return withMultipleTopEntries.slice(0, limit)
 
   return withMultipleTopEntries;
 };

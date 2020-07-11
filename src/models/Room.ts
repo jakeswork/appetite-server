@@ -91,7 +91,7 @@ class Room {
     const restaurants = usersSelections.map(({ id }) => id)
     const cuisines = [].concat(...usersSelections.map(({ cuisines }) => cuisines.split(', ')))
     const mostCommonRestaurants = mostCommonEntries(restaurants)
-    const mostCommonCuisines = mostCommonEntries(cuisines);
+    const mostCommonCuisines = mostCommonEntries(cuisines, 3);
     const resolvedRestaurants = await Promise.all(mostCommonRestaurants.map(id => Restaurant.findById(id)))
 
     return {

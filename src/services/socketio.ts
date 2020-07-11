@@ -29,6 +29,7 @@ class SocketIO {
     this.onUpdateSelection()
     this.onConfirmSelection()
     this.onSendMessage()
+    this.onGetMessageHistory()
     this.onDisconnect()
   }
 
@@ -169,6 +170,16 @@ class SocketIO {
       this.user.room.addMessage(message)
   
       return this.server.to(this.user.room.id).emit('messageHistoryUpdated', this.user.room.messages)
+    })
+  }
+
+  onGetMessageHistory () {
+    return this.socket.on('getMessageHistory', () => {
+      if (!this.user.room || !this.user.room.id) {
+        return this.server.to(this.user.id).emit('getMessageHistoryError', 'You are not registered to any room')
+      };
+  
+      return this.server.to(this.user.id).emit('messageHistory', this.user.room.messages)
     })
   }
 
