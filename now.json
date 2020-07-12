@@ -1,16 +1,4 @@
 {
   "version": 2,
-  "name": "appetite-server",
-  "builds": [{
-    "src": "dist/**/*.js",
-    "use": "@now/node@canary",
-    "config": {
-      "includeFiles": [],
-      "maxLambdaSize": "25mb"
-    }
-  }],
-  "routes": [{
-    "src": "/",
-    "dest": "dist/src/"
-  }]
+  "name": "appetite-server"
 }
