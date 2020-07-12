@@ -7,8 +7,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "start": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
-    "build": "tsc && node -r dotenv/config ./dist/server.js"
+    "dev": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
+    "start": "node -r dotenv/config ./dist/server.js",
+    "build": "tsc"
   },
   "dependencies": {
     "axios": "^0.19.2",
