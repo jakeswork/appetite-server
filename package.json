@@ -1,18 +1,14 @@
 {
-  "name": "lunchbox-server",
+  "name": "appetite-server",
   "version": "1.0.0",
-  "description": "The server for the lunchbox app",
+  "description": "The server for the appetite app",
   "main": "dist/server.js",
   "author": "Jake Flynn",
   "license": "MIT",
   "private": false,
-  "engines": {
-    "node": "10.x"
-  },
   "scripts": {
     "start": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
-    "build": "tsc && node -r dotenv/config ./dist/server.js",
-    "deploy": "now"
+    "build": "tsc && node -r dotenv/config ./dist/server.js"
   },
   "dependencies": {
     "axios": "^0.19.2",
