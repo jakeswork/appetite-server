@@ -6,9 +6,13 @@
   "author": "Jake Flynn",
   "license": "MIT",
   "private": false,
+  "engines": {
+    "node": "10.x"
+  },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
-    "prod": "tsc && node -r dotenv/config ./dist/server.js"
+    "prod": "tsc && node -r dotenv/config ./dist/server.js",
+    "deploy": "now"
   },
   "dependencies": {
     "axios": "^0.19.2",
