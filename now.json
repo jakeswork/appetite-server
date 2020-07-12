@@ -9,14 +9,6 @@
       "maxLambdaSize": "25mb"
     }
   }],
-  "build": {
-    "env": {
-      "ZOMATO_API_KEY": "@zomato_api_key"
-    }
-  },
-  "env": {
-    "ZOMATO_API_KEY": "@zomato_api_key"
-  },
   "routes": [{
     "src": "/",
     "dest": "dist/src/"
