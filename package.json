@@ -10,8 +10,8 @@
     "node": "10.x"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
-    "prod": "tsc && node -r dotenv/config ./dist/server.js",
+    "start": "ts-node-dev --respawn --transpileOnly -r dotenv/config ./src/server.ts",
+    "build": "tsc && node -r dotenv/config ./dist/server.js",
     "deploy": "now"
   },
   "dependencies": {
